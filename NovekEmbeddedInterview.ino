@@ -97,3 +97,72 @@ void sim800Init()
     delay(6000);
     showSerialData();      
 }
+
+/**
+ * @brief: Sends the temperature data to the webserver/ web address using an API
+*/
+void sim800SendData()
+{
+    Serial1.println("AT+HTTPINIT"); // Initialize the HTTP Service
+    delay(6000);
+    showSerialData();   
+    Serial1.println("AT+HTTPPARA=\"CID\",1"); // Sets the Bearer profile identifier to Bearer is connected
+    delay(6000);
+    showSerialData();
+
+    /*  Parse the temperature data into JSON format */
+    String temperature = (String)max6675TempRead();
+    
+    // Allocate the json buffer memory in the stack since the data is 12 bytes.
+    StaticJsonDocument<100> jsonBuffer; // allocates a little more than a 200 bytes in the stack memory.
+    jsonBuffer["t"] = temperature; // Initialize the JSONDocument array with an element with the key "t" and value of temperature
+    String sendToServer; // string buffer to store the json format data
+    serializeJson(jsonBuffer, sendToServer); // Serialize the JSON Document
+
+    // Set the web address
+    Serial1.println("AT+HTTPPARA=\"URL\",\"http://178.62.249.218:5000/temperature\""); 
+    delay(4000);
+    showSerialData();
+
+    // Set the content type to json format
+    Serial1.println("AT+HTTPPARA=\"CONTENT\",\"application/json\""); 
+    delay(4000);
+    showSerialData();
+
+    // Set the size of the data in bytes and the maximum time in milliseconds to input the data
+    Serial1.println("AT+HTTPDATA=" + String(sendToServer.length()) + ",100000"); 
+    Serial.println(sendToServer);
+    delay(6000);
+    showSerialData();
+
+    // Send the data
+    Serial1.println(sendToServer);
+    delay(6000);
+    showSerialData;
+    
+    // Set HTTP Action Method as POST. Expected response: 200, OK
+    Serial1.println("AT+HTTPACTION=1");
+    delay(6000);
+    showSerialData();
+
+    // Reads the HTTP Server Response
+    Serial1.println("AT+HTTPREAD");
+    delay(6000);
+    showSerialData();
+
+    // Terminates the HTTP Service
+    Serial1.println("AT+HTTPTERM");
+    delay(10000);
+    showSerialData;
+}
+/**
+ * @brief: Reads  data from the sim800l modem and prints it to the Serial Monitor
+*/
+void showSerialData()
+{
+    while(Serial1.available() !=0) // As long as there is data being transmitted from the sim800l modem
+    {
+        Serial.write(Serial1.read()); // Read data from the sim800l and print it out to the serial monitor
+        delay(1000);
+    }
+}
