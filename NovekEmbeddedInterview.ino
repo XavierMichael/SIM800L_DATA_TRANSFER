@@ -21,12 +21,13 @@ void  setup() {
     // Check to see if thermocouple is connected to the max6675
     float tempC = max6675Temp.readCelsius();
     (tempC == NAN)? Serial.println("No thermocouple attached"): Serial.println("Thermocouple is attached");
-
+    sim800Init();
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-
+    sim800SendData();
+    delay(30000);
 }
 
 /**
