@@ -17,7 +17,10 @@ void sim800SendData();
 void showSerialData();
 
 void  setup() {
-  // put your setup code here, to run once:
+    Serial.begin(9600);
+    // Check to see if thermocouple is connected to the max6675
+    float tempC = max6675Temp.readCelsius();
+    (tempC == NAN)? Serial.println("No thermocouple attached"): Serial.println("Thermocouple is attached");
 
 }
 
@@ -38,4 +41,59 @@ float max6675TempRead()
     // Print out the temperature
     Serial.print("The temperature in Celsius Degrees is: "); Serial.println(tempCelsius);
     return tempCelsius;    
+}
+
+/**
+ * @brief: Initializes the sim800
+*/
+void sim800Init()
+{
+    Serial1.begin(9600); // Setting the baudrate of the sim800l to 9600
+    /* Check if the sim800l is properly connected to the arduino mega
+     * If not connected, the execution remain in this loop.
+     */
+    while(!Serial1.available())
+    {
+        Serial1.println("AT");
+        delay(1000);
+        Serial.println("Connecting...");
+    }
+    Serial.print("Connected");
+    Serial1.println("AT+CMEE=2"); //Set the ME's result error code
+    delay(2000);
+    Serial1.println("AT+CPIN?"); //Checks for pin status. Can be used to check if sim is inserted(properly) or not.
+    delay(2000);
+    showSerialData();
+    Serial1.println("AT+CSQ"); //Returns signal strength indication. Response= +CSQ: <rssi>,<ber>  
+    delay(2000);
+    showSerialData();
+    Serial1.println("AT+CSCS?"); //Checks for terminal equipment's(TE) ch_set. Can be used to check if antennae is ok.
+    delay(2000);  
+    showSerialData();
+    /**
+     * @brief AT+SAPBR : Bearer settings for applications based on IP 
+    */
+    Serial1.println("AT+SAPBR=3,1,\"Contype\",\"GPRS\""); // Sets the bearer internet connection type to GPRS
+    delay(6000);
+    showSerialData();
+    /*
+     * Set the APN, username and password
+    */
+    Serial1.println("AT+SAPBR=3,1,\"APN\",\"safaricom\""); // Set APN
+    delay(6000);
+    showSerialData();
+    //NB: Comment out username and password settings when using Airtel
+    Serial1.println("AT+SAPBR=3,1,\"USER\",\"saf\""); // Set Username
+    delay(6000);
+    showSerialData();
+    Serial1.println("AT+SAPBR=3,1,\"PWD\",\"data\""); // Set Password
+    delay(6000);
+    showSerialData();    
+
+    Serial1.println("AT+SAPBR=1,1"); // Open the bearer
+    delay(6000);
+    showSerialData();
+    Serial1.println("AT+SAPBR=2,1"); // Query the bearer
+    delay(6000);
+    showSerialData();      
 }
