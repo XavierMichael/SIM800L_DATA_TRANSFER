@@ -1,4 +1,5 @@
 #include <max6675.h>
+#include <ArduinoJson.h>
 
 #define MAX6675_SO          8       // Slave out in. Transmits data from the max6675 to the arduino
 #define MAX6675_CS          9       // Chip Select. Used by arduino to select the max6675 module
